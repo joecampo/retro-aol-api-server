@@ -6,6 +6,7 @@ use App\Events\LoggedOn;
 use App\Models\Session;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Events\SetScreenName;
+use App\Events\LoginProgress;
 use function Clue\React\Block\sleep;
 
 uses(RefreshDatabase::class);
@@ -20,6 +21,7 @@ it('can sign on as a guest', function () {
 
     sleep(.1);
 
+    Event::assertDispatched(LoginProgress::class, 4);
     Event::assertDispatched(SetScreenName::class);
     Event::assertDispatched(LoggedOn::class);
 });

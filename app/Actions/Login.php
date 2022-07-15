@@ -15,6 +15,7 @@ use App\Models\Session;
 use App\Events\SetScreenName;
 use App\Enums\AtomPacket;
 use Illuminate\Support\Stringable;
+use App\Events\LoginProgress;
 
 class Login
 {
@@ -64,6 +65,8 @@ class Login
             };
         });
 
+        LoginProgress::dispatch($this->session, 50);
+
         $this->state = SignOnState::NEEDS_SC_PACKET;
     }
 
@@ -92,6 +95,8 @@ class Login
     {
         $this->connection->write(Packet::make((AuthPacket::SC_PACKET->value))->prepare());
 
+        LoginProgress::dispatch($this->session, 75);
+
         $this->state = SignOnState::AWAITING_WELCOME;
     }
 
@@ -112,6 +117,7 @@ class Login
 
         $this->removeListener('data', $this->connection);
 
+        LoginProgress::dispatch($this->session, 100);
         LoggedOn::dispatch($this->session);
     }
 
@@ -125,6 +131,8 @@ class Login
     protected function sendVersionPacket(): void
     {
         $this->connection->write(hex2binary(AuthPacket::VERSION_PACKET->value));
+
+        LoginProgress::dispatch($this->session, 25);
 
         $this->state = SignOnState::NEEDS_Dd_PACKET;
     }
