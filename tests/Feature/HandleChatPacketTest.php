@@ -24,6 +24,7 @@ it('can parse people that are in the chat room', function () {
 
     Event::assertDispatched(ChatRoomUsers::class, function ($event) {
         return $event->users === [
+            'reaol',
             'PoSsE4uS',
             'Zip',
             'Guest6ZE',
