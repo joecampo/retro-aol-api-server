@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\LoginController;
 use App\Http\Controllers\Api\LogoffController;
 use App\Http\Controllers\Api\JoinChatController;
 use App\Http\Controllers\Api\SendChatMessage;
+use App\Http\Controllers\Api\FetchChatRoomsController;
 
 Route::post('/sessions', [SessionsController::class, '__invoke']);
 
@@ -14,4 +15,5 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/logoff', [LogoffController::class, '__invoke']);
     Route::post('/join-chat', [JoinChatController::class, '__invoke']);
     Route::post('/send-chat-message', [SendChatMessage::class, '__invoke']);
+    Route::post('/fetch-chat-rooms', FetchChatRoomsController::class);
 });
