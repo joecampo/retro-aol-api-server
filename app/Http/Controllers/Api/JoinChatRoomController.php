@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Actions\JoinChat;
+use App\Actions\JoinChatRoom;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use App\Services\Command;
 
-class JoinChatController extends Controller
+class JoinChatRoomController extends Controller
 {
     public function __invoke(): JsonResponse
     {
-        Command::dispatch(JoinChat::class, 'Welcome');
+        Command::dispatch(JoinChatRoom::class, 'Welcome');
 
         return response()->json('', 200);
     }

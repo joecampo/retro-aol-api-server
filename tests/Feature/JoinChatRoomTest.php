@@ -1,9 +1,9 @@
 <?php
 
-use App\Actions\JoinChat;
 use React\Socket\ConnectionInterface;
 use App\Models\Session;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Actions\JoinChatRoom;
 use function Clue\React\Block\sleep;
 
 uses(RefreshDatabase::class);
@@ -12,7 +12,7 @@ it('it can join a chat room', function () {
     $session = Session::factory()->create();
 
     $this->client->connect(function (ConnectionInterface $connection) use ($session) {
-        JoinChat::run($connection, $session, 'vb');
+        JoinChatRoom::run($connection, $session, 'vb');
     });
 
     sleep(.1);

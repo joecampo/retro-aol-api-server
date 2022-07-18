@@ -9,7 +9,7 @@ use React\Socket\ConnectionInterface;
 use App\Models\Session;
 use App\Enums\ChatPacket;
 
-class JoinChat
+class LeaveChatRoom
 {
     use AsAction;
     use WithAttributes;
@@ -20,16 +20,12 @@ class JoinChat
         $this->set('session', $session);
         $this->set('roomName', $roomName);
 
-        with(ChatPacket::cQ_PACKET->value, function ($packet): void {
+        with(ChatPacket::rD_PACKET->value, function ($packet): void {
             $roomNameLengthByte = str_pad(dechex(strlen($this->roomName)), 2, '0', STR_PAD_LEFT);
             $packet = str_replace('{replace}', $roomNameLengthByte.bin2hex($this->roomName), $packet);
             $packet = substr_replace($packet, calculatePacketLengthByte($packet), 8, 2);
 
             $this->connection->write(Packet::make($packet)->prepare());
-        });
-
-        $connection->on('data', function (string $data): void {
-            with(Packet::make($data), fn (Packet $packet) => HandleChatPacket::run($this->session, $packet));
         });
     }
 }
