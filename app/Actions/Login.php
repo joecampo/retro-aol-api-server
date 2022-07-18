@@ -4,7 +4,6 @@ namespace App\Actions;
 
 use App\Enums\AuthPacket;
 use App\Enums\SignOnState;
-use App\Events\InvalidLogin;
 use App\Events\LoggedOn;
 use App\Traits\RemoveListener;
 use App\ValueObjects\Packet;
@@ -14,6 +13,7 @@ use React\Socket\ConnectionInterface;
 use App\Models\Session;
 use App\Events\SetScreenName;
 use App\Enums\AtomPacket;
+use App\Events\LoginInvalid;
 use Illuminate\Support\Stringable;
 use App\Events\LoginProgress;
 
@@ -125,7 +125,7 @@ class Login
     {
         $this->removeListener('data', $this->connection);
 
-        // InvalidLogin::dispatch();
+        LoginInvalid::dispatch($this->session);
     }
 
     protected function sendVersionPacket(): void

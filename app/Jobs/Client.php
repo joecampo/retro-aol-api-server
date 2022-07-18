@@ -14,6 +14,8 @@ use App\Models\Session;
 use App\Actions\StartHeartbeat;
 use React\Socket\ServerInterface;
 use React\Socket\SocketServer;
+use App\Events\LoginInvalid;
+use Illuminate\Support\Facades\Event;
 use function Clue\React\Block\sleep;
 
 class Client implements ShouldQueue
@@ -28,13 +30,16 @@ class Client implements ShouldQueue
     public bool $disconnect = false;
 
     public function __construct(
-        public Session $session
+        public Session $session,
+        public array $credentials
     ) {
     }
 
     public function handle(): void
     {
         $this->listenForCommands();
+
+        $this->registerEventListeners();
 
         $this->connect();
 
@@ -57,7 +62,7 @@ class Client implements ShouldQueue
                     $this->disconnect = true;
                 });
 
-                Login::run($connection, $this->session, ['guest', null]);
+                Login::run($connection, $this->session, $this->credentials);
                 StartHeartbeat::run($connection);
             });
         });
@@ -71,6 +76,13 @@ class Client implements ShouldQueue
                     resolve($command->action)->run($this->connection, $this->session, $command->payload);
                 });
             });
+        });
+    }
+
+    private function registerEventListeners(): void
+    {
+        Event::listen(LoginInvalid::class, function () {
+            $this->disconnect = true;
         });
     }
 
