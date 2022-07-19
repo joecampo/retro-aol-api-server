@@ -13,6 +13,7 @@ use App\Events\ChatRoomUsers;
 use App\Events\NewChatMessage;
 use App\Events\UserEnteredChat;
 use App\Events\UserLeftChat;
+use App\Events\NewInstantMessage;
 
 class HandleChatPacket
 {
@@ -36,8 +37,22 @@ class HandleChatPacket
             $packet->isAtomPacket(AtomPacket::CHAT_ROOM_ENTER) => $this->parseEnter($packet),
             $packet->isAtomPacket(AtomPacket::CHAT_ROOM_LEAVE) => $this->parseLeave($packet),
             $packet->isAtomPacket(AtomPacket::CHAT_ROOM_PEOPLE) => $this->parsePeopleInRoom($packet),
+            $packet->isAtomPacket(AtomPacket::INSTANT_MESSAGE) => $this->parseInstantMessage($packet),
             default => null
         };
+    }
+
+    private function parseInstantMessage(Packet $packet): void
+    {
+        [$screenName, $message] = $packet->takeNumber(1)
+            ->toStringableHex()
+            ->matchFromPacket(AtomPacket::INSTANT_MESSAGE, 4)
+            ->substr(2)
+            ->replace('3a2020', '|')
+            ->explode('|')
+            ->map(fn (string $data) => hex2binary($data));
+
+        NewInstantMessage::dispatch($this->session, $screenName, $message);
     }
 
     private function parsePeopleInRoom(Packet $packet): void

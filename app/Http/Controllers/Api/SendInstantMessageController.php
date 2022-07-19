@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Actions\SendChatMessage as SendMessage;
 use App\Services\Command;
+use Illuminate\Http\Request;
+use App\Actions\SendInstantMessage;
 
-class SendChatMessage extends Controller
+class SendInstantMessageController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {
-        Command::dispatch(SendMessage::class, $request->message);
+        Command::dispatch(SendInstantMessage::class, [$request->screenName, $request->message]);
 
         return response()->json('', 201);
     }

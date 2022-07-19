@@ -9,6 +9,7 @@ use App\Events\ChatRoomUsers;
 use App\Events\NewChatMessage;
 use App\Events\UserEnteredChat;
 use App\Events\UserLeftChat;
+use App\Events\NewInstantMessage;
 
 uses(RefreshDatabase::class);
 
@@ -68,4 +69,14 @@ it('can parse user entering the chat room', function () {
     Event::assertDispatched(UserEnteredChat::class, function ($event) {
         return $event->screenName === 'GuestL';
     });
+});
+
+it('can receive instant messages', function () {
+    Event::fake();
+
+    $packet = Packet::make(TestPacket::INSTANT_MESSAGE_RECEIVED->value);
+
+    HandleChatPacket::run($this->session, $packet);
+
+    Event::assertDispatched(NewInstantMessage::class);
 });
