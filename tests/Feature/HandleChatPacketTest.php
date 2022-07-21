@@ -67,7 +67,7 @@ it('can parse user entering the chat room', function () {
     HandleChatPacket::run($this->session, $packet);
 
     Event::assertDispatched(UserEnteredChat::class, function ($event) {
-        return $event->screenName === 'GuestL';
+        return $event->screenName === 'Guest5';
     });
 });
 
