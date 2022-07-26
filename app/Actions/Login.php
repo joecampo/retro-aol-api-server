@@ -54,7 +54,7 @@ class Login
 
     private function needsDdPacket(Packet $packet): bool
     {
-        return $this->state === SignOnState::NEEDS_Dd_PACKET && $packet->toHex() === '5ab71100037f7f240d';
+        return $this->state === SignOnState::NEEDS_Dd && $packet->takeNumber(1)->toHex() === '5ab71100037f7f240d';
     }
 
     private function sendDdPacket(): void
@@ -68,7 +68,7 @@ class Login
 
         LoginProgress::dispatch($this->session, 50);
 
-        $this->state = SignOnState::NEEDS_SC_PACKET;
+        $this->state = SignOnState::NEEDS_SC;
     }
 
     private function sendGuestDdPacket(): void
@@ -89,7 +89,7 @@ class Login
 
     private function needsScPacket(Packet $packet): bool
     {
-        return $this->state === SignOnState::NEEDS_SC_PACKET && str_contains($packet->toHex(), '5343');
+        return $this->state === SignOnState::NEEDS_SC && str_contains($packet->toHex(), '5343');
     }
 
     private function sendScPacket(): void
@@ -108,7 +108,12 @@ class Login
 
     private function sendUdPacket(): void
     {
-        $this->connection->write(Packet::make(AuthPacket::uD_PACKET->value)->prepare());
+        with(AuthPacket::uD_PACKET->value, function ($packet) {
+            $packet = str_replace('{timestamp}', bin2hex(time()), $packet);
+            $packet = substr_replace($packet, calculatePacketLengthByte($packet), 8, 2);
+
+            $this->connection->write(Packet::make($packet)->prepare());
+        });
     }
 
     private function hasSuccessfulLogin(Packet $packet): bool
@@ -118,7 +123,7 @@ class Login
 
     private function hasInvalidLogin(Packet $packet): bool
     {
-        return $this->state === SignOnState::NEEDS_SC_PACKET
+        return $this->state === SignOnState::NEEDS_SC
             && (str_contains($packet->data, 'incorrect!') || str_contains($packet->data, 'login-000002'));
     }
 
@@ -145,12 +150,12 @@ class Login
 
         LoginProgress::dispatch($this->session, 25);
 
-        $this->state = SignOnState::NEEDS_Dd_PACKET;
+        $this->state = SignOnState::NEEDS_Dd;
     }
 
     private function setScreenName(Packet $packet): void
     {
-        if (isset($this->screenName) || $this->state !== SignOnState::NEEDS_SC_PACKET) {
+        if (isset($this->screenName) || $this->state !== SignOnState::NEEDS_SC) {
             return;
         }
 
