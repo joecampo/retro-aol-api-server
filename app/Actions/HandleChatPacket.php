@@ -3,7 +3,6 @@
 namespace App\Actions;
 
 use App\Enums\AtomPacket;
-use App\Enums\PacketToken;
 use App\ValueObjects\Packet;
 use Illuminate\Support\Stringable;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -13,7 +12,8 @@ use App\Events\ChatRoomUsers;
 use App\Events\NewChatMessage;
 use App\Events\UserEnteredChat;
 use App\Events\UserLeftChat;
-use App\Events\NewInstantMessage;
+use App\Enums\AtomPacketEvent;
+use App\ValueObjects\Atom;
 
 class HandleChatPacket
 {
@@ -24,47 +24,29 @@ class HandleChatPacket
     {
         $this->set('session', $session);
 
-        match ($packet->token()?->name) {
-            PacketToken::AT->name => $this->parseAtomStream($packet),
-            PacketToken::AB->name => $this->parseRoomMessage($packet),
+        match ($packet->token()) {
+            'AT' => $this->parseAtomStream($packet),
+            'AB' => $this->parseRoomMessage($packet),
             default => info($packet->toHex())
         };
     }
 
     private function parseAtomStream(Packet $packet): void
     {
-        match (true) {
-            $packet->isAtomPacket(AtomPacket::CHAT_ROOM_ENTER) => $this->parseEnter($packet),
-            $packet->isAtomPacket(AtomPacket::CHAT_ROOM_LEAVE) => $this->parseLeave($packet),
-            $packet->isAtomPacket(AtomPacket::CHAT_ROOM_PEOPLE) => $this->parsePeopleInRoom($packet),
-            $packet->isAtomPacket(AtomPacket::INSTANT_MESSAGE) => $this->parseInstantMessage($packet),
+        match (AtomPacketEvent::event($packet)) {
+            AtomPacketEvent::CHAT_ROOM_ENTER => $this->parseEnter($packet),
+            AtomPacketEvent::CHAT_ROOM_LEAVE => $this->parseLeave($packet),
+            AtomPacketEvent::INSTANT_MESSAGE => HandleInstantMessagePacket::run($this->session, $packet),
+            AtomPacketEvent::CHAT_ROOM_PEOPLE => $this->parsePeopleInRoom($packet),
             default => null
         };
     }
 
-    private function parseInstantMessage(Packet $packet): void
-    {
-        [$screenName, $message] = $packet->takeNumber(1)
-            ->toStringableHex()
-            ->matchFromPacket(AtomPacket::INSTANT_MESSAGE, 4)
-            ->substr(2)
-            ->replace('3a2020', '|')
-            ->explode('|')
-            ->map(fn (string $data) => hex2binary($data));
-
-        NewInstantMessage::dispatch($this->session, $screenName, $message);
-    }
-
     private function parsePeopleInRoom(Packet $packet): void
     {
-        $users = $packet->takeNumber(1)
-            ->toStringableHex()
-            ->matchFromPacket(AtomPacket::CHAT_ROOM_PEOPLE, 7)
-            ->matchAll('/0b01(.*?)100b04/')
-            ->map(fn ($hex) => hex2binary(str($hex)->substr(2)))
-            ->filter();
+        $users = $packet->atoms()->where('name', 'chat_add_user')->map(fn (Atom $atom) => $atom->toBinary());
 
-        ChatRoomUsers::dispatch($this->session, $users->toArray());
+        ChatRoomUsers::dispatch($this->session, $users->values()->toArray());
     }
 
     private function parseRoomMessage(Packet $packet): void
@@ -87,22 +69,14 @@ class HandleChatPacket
 
     private function parseEnter(Packet $packet): void
     {
-        $screenName = $packet->takeNumber(1)
-            ->toStringableHex()
-            ->matchFromPacket(AtomPacket::CHAT_ROOM_ENTER, 3)
-            ->substr(2)
-            ->when(true, fn ($hex) => hex2binary($hex));
+        $screenName = $packet->atoms()->firstWhere('name', 'chat_add_user')->toBinary();
 
         UserEnteredChat::dispatch($this->session, $screenName);
     }
 
     private function parseLeave(Packet $packet): void
     {
-        $screenName = $packet->takeNumber(1)
-            ->toStringableHex()
-            ->matchFromPacket(AtomPacket::CHAT_ROOM_LEAVE, 3)
-            ->substr(2)
-            ->when(true, fn ($hex) => hex2binary($hex));
+        $screenName = $packet->atoms()->firstWhere('name', 'man_get_index_by_title')->toBinary();
 
         UserLeftChat::dispatch($this->session, $screenName);
     }

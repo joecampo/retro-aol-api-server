@@ -6,12 +6,13 @@ use App\Models\Session;
 use Lorisleiva\Actions\Concerns\AsAction;
 use React\Socket\ConnectionInterface;
 use App\ValueObjects\Packet;
-use App\Enums\PacketToken;
 use App\Enums\ChatPacket;
 use React\EventLoop\Loop;
 use Lorisleiva\Actions\Concerns\WithAttributes;
 use App\Events\ChatRoomList;
 use App\Traits\RemoveListener;
+use App\ValueObjects\Atom;
+use Illuminate\Support\Stringable;
 
 class FetchChatRooms
 {
@@ -28,7 +29,7 @@ class FetchChatRooms
 
         $connection->on('data', function (string $data) {
             with(Packet::make($data), function (Packet $packet) {
-                if ($packet->token()?->name === PacketToken::AT->name) {
+                if ($packet->token() === 'AT') {
                     $this->parseChatRooms($packet);
                     $this->startTimer();
                 }
@@ -38,20 +39,15 @@ class FetchChatRooms
 
     private function parseChatRooms(Packet $packet): void
     {
-        if (!str_contains($packet->toHex(), '0001000109032000620f13020102010a010101')) {
+        if ($packet->atoms()->firstWhere('name', 'man_set_context_globalid')?->data !== '32-98') {
             return;
         }
 
-        $chatRooms = $packet
-            ->takeNumber(1)
-            ->toStringableHex()
-            ->after('010101000a')
-            ->when(true, function ($hex) {
-                preg_match_all('/06(\d{2,4})09(.*?)0202010201020001/', $hex, $output);
-
-                return collect(array_combine($output[2], $output[1]))
-                ->mapWithKeys(function ($people, $chatRoom) {
-                    return [hex2binary($chatRoom) => intval(hex2binary($people))];
+        $chatRooms = $packet->atoms()
+            ->where('name', 'man_start_object')
+            ->mapWithKeys(function (Atom $atom) {
+                return with(str($atom->hex)->substr(2), function (Stringable $hex) {
+                    return [hex2binary($hex->after('09')) => intval(hex2binary($hex->before('09')))];
                 });
             });
 

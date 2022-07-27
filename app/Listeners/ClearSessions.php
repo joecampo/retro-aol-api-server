@@ -14,6 +14,10 @@ class ClearSessions
 
     public function handle(): void
     {
+        Session::all()->each(function (Session $session): void {
+            cache()->tags($session->id)->flush();
+        });
+
         Session::truncate();
         PersonalAccessToken::truncate();
     }

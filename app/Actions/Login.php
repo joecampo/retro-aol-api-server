@@ -12,7 +12,6 @@ use Lorisleiva\Actions\Concerns\WithAttributes;
 use React\Socket\ConnectionInterface;
 use App\Models\Session;
 use App\Events\SetScreenName;
-use App\Enums\AtomPacket;
 use App\Events\LoginInvalid;
 use Illuminate\Support\Stringable;
 use App\Events\LoginProgress;
@@ -103,7 +102,7 @@ class Login
 
     private function needsUdPAcket(Packet $packet): bool
     {
-        return $packet->token()->name === 'AT' && str_contains($packet->toHex(), '7544');
+        return $packet->token() === 'AT' && str_contains($packet->toHex(), '7544');
     }
 
     private function sendUdPacket(): void
@@ -169,9 +168,9 @@ class Login
             return;
         }
 
-        if ($packet->isAtomPacket(AtomPacket::GUEST_WELCOME_WINDOW)) {
-            with($packet->takeNumber(1)->toStringableHex(), function (Stringable $hex): void {
-                $this->screenName = hex2binary($hex->matchFromPacket(AtomPacket::GUEST_WELCOME_WINDOW, 2));
+        if ($packet->token() === 'AT' && $packet->atoms()->contains('name', 'act_set_guest_flag')) {
+            with(str($packet->atoms()->firstWhere('name', 'man_append_data')->toBinary()), function (Stringable $text) {
+                $this->screenName = $text->match('/,(.*?)</');
 
                 SetScreenName::dispatch($this->session, $this->screenName);
             });
