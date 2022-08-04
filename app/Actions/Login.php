@@ -170,7 +170,7 @@ class Login
 
         if ($packet->token() === 'AT' && $packet->atoms()->contains('name', 'act_set_guest_flag')) {
             with(str($packet->atoms()->firstWhere('name', 'man_append_data')->toBinary()), function (Stringable $text) {
-                $this->screenName = $text->match('/,(.*?)</');
+                $this->screenName = $text->match('/, (.*?)</');
 
                 SetScreenName::dispatch($this->session, $this->screenName);
             });
