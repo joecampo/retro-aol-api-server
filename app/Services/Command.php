@@ -9,6 +9,10 @@ class Command
 {
     public static function dispatch(string $action, mixed $payload = null): void
     {
+        if (!self::port()) {
+            return;
+        }
+
         with(new Connector(), function (Connector $connector) use ($action, $payload): void {
             $connector->connect('127.0.0.1:'. self::port())->then(function ($connection) use ($action, $payload): void {
                 $connection->write(json_encode(['action' => $action, 'payload' => $payload]));
@@ -18,7 +22,7 @@ class Command
         });
     }
 
-    private static function port(): int
+    private static function port(): ?int
     {
         return Auth::user()->command_port;
     }
