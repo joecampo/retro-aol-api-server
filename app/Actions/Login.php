@@ -59,7 +59,7 @@ class Login
     private function sendDdPacket(): void
     {
         with([$screenName, $password] = $this->credentials, function () use ($screenName, $password) {
-            match ($screenName) {
+            match (strtolower($screenName)) {
                 'guest' => $this->sendGuestDdPacket(),
                 default => $this->sendAuthDdPacket($screenName, $password),
             };
@@ -160,7 +160,7 @@ class Login
 
         [$username,] = $this->credentials;
 
-        if ($username !== 'guest') {
+        if (strtolower($username) !== 'guest') {
             $this->screenName = $username;
 
             SetScreenName::dispatch($this->session, $this->screenName);

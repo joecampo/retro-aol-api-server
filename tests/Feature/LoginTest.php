@@ -18,7 +18,7 @@ it('can sign on as a guest', function () {
     Event::fake();
 
     $this->client->connect(function ($connection) {
-        Login::run($connection, $this->session, ['guest', null]);
+        Login::run($connection, $this->session, ['Guest', null]);
     });
 
     sleep(.1);
