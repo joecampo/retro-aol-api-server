@@ -8,11 +8,13 @@ use Lorisleiva\Actions\Concerns\WithAttributes;
 use React\Socket\ConnectionInterface;
 use App\Models\Session;
 use App\Enums\ChatPacket;
+use App\Traits\RemoveListener;
 
 class LeaveChatRoom
 {
     use AsAction;
     use WithAttributes;
+    use RemoveListener;
 
     public function handle(ConnectionInterface $connection, Session $session, $roomName): void
     {
@@ -26,6 +28,8 @@ class LeaveChatRoom
             $packet = substr_replace($packet, calculatePacketLengthByte($packet), 8, 2);
 
             $this->connection->write(Packet::make($packet)->prepare());
+
+            $this->connection->removeListener('data', $this->findClosure($this->connection, JoinChatRoom::class));
         });
     }
 }

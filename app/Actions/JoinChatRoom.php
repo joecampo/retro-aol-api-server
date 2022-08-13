@@ -29,7 +29,7 @@ class JoinChatRoom
         });
 
         $connection->on('data', function (string $data): void {
-            with(Packet::make($data), fn (Packet $packet) => HandleChatPacket::run($this->session, $packet));
+            HandleChatPacket::run($this->session, Packet::make($data));
         });
     }
 }

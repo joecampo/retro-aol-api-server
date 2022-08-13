@@ -13,7 +13,7 @@ trait RemoveListener
         $connection->removeListener($type, $this->findClosure($connection, get_called_class()));
     }
 
-    private function findClosure(ConnectionInterface $connection, string $className): Closure
+    public function findClosure(ConnectionInterface $connection, string $className): Closure
     {
         return collect($connection->listeners('data'))->first(function ($closure) use ($className) {
             return (new ReflectionFunction($closure))->getClosureScopeClass()->getName() === $className;
