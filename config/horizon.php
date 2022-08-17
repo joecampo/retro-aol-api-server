@@ -169,7 +169,7 @@ return [
             'connection' => 'redis',
             'queue' => ['default', 'command'],
             'balance' => 'simple',
-            'maxProcesses' => 1,
+            'maxProcesses' => 10,
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 128,
