@@ -29,7 +29,9 @@ class LeaveChatRoom
 
             $this->connection->write(Packet::make($packet)->prepare());
 
-            $this->connection->removeListener('data', $this->findClosure($this->connection, JoinChatRoom::class));
+            if ($closure = $this->findClosure($this->connection, JoinChatRoom::class)) {
+                $this->connection->removeListener('data', $closure);
+            }
         });
     }
 }
