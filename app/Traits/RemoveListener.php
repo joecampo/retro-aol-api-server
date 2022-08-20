@@ -10,7 +10,9 @@ trait RemoveListener
 {
     public function removeListener(string $type, ConnectionInterface $connection): void
     {
-        $connection->removeListener($type, $this->findClosure($connection, get_called_class()));
+        if ($closure = $this->findClosure($connection, get_called_class())) {
+            $connection->removeListener($type, $closure);
+        }
     }
 
     public function findClosure(ConnectionInterface $connection, string $className): ?Closure
