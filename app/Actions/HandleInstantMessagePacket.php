@@ -20,38 +20,36 @@ class HandleInstantMessagePacket
         $this->set('session', $session);
         $this->set('packet', $packet);
 
-        match (true) {
-            $this->instantMessages()->has($this->globalId()) => $this->parseFromPrevious(),
-            default => $this->parseFromNew()
-        };
+        $this->createMessageSession();
+
+        NewInstantMessage::dispatch($this->session, $this->from(), $this->message());
     }
 
-    private function parseFromPrevious(): void
+    private function createMessageSession(): void
     {
-        NewInstantMessage::dispatch(
-            $this->session,
-            $this->instantMessages()[$this->globalId()],
-            $this->packet->atoms()->firstWhere('name', 'man_append_data')->toBinary()
-        );
-    }
-
-    private function parseFromNew(): void
-    {
-        with($this->instantMessages(), function (Collection $instantMessages): void {
-            cache()->tags($this->session->id)->forever(
-                'instant_messages',
-                $instantMessages->put(
-                    $this->globalId(),
-                    $this->packet->atoms()->firstWhere('name', 'man_replace_data')->toBinary(),
-                )
-            );
+        with($this->messageSessions(), function (Collection $sessions) {
+            if (! $sessions->firstWhere('screenName', $this->from())) {
+                cache()->tags($this->session->id)->forever('instant_messages', $sessions->push([
+                    'globalId' => $this->globalId(),
+                    'responseId' => $sessions->count(),
+                    'screenName' => $this->from(),
+                ]));
+            }
         });
+    }
 
-        NewInstantMessage::dispatch(
-            $this->session,
-            $this->packet->atoms()->firstWhere('name', 'man_replace_data')->toBinary(),
-            $this->packet->atoms()->firstWhere('name', 'man_append_data')->toBinary()
-        );
+    private function from(): string
+    {
+        if ($screenName = $this->packet->atoms()->firstWhere('name', 'man_replace_data')?->toBinary()) {
+            return $screenName;
+        }
+
+        return $this->messageSessions()->firstWhere(['responseId' => $this->responseId()])['screenName'];
+    }
+
+    private function message(): string
+    {
+        return $this->packet->atoms()->firstWhere('name', 'man_append_data')->toBinary();
     }
 
     private function globalId(): ?string
@@ -63,7 +61,16 @@ class HandleInstantMessagePacket
         });
     }
 
-    private function instantMessages(): Collection
+    private function responseId(): ?string
+    {
+        return once(function () {
+            return $this->packet->atoms()->last(function (Atom $atom) {
+                return $atom->name === 'man_set_context_response_id';
+            })?->data;
+        });
+    }
+
+    private function messageSessions(): Collection
     {
         return cache()->tags($this->session->id)->get('instant_messages', collect());
     }
