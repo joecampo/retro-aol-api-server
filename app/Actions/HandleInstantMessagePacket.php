@@ -31,7 +31,7 @@ class HandleInstantMessagePacket
             if (! $sessions->firstWhere('screenName', $this->from())) {
                 cache()->tags($this->session->id)->forever('instant_messages', $sessions->push([
                     'responseId' => $sessions->count(),
-                    'streamId' => $this->packet->toStringableHex()->substr(20, 4)->value,
+                    'streamId' => str_pad(dechex(mt_rand(500, 1001)), 4, '0', STR_PAD_LEFT),
                     'screenName' => $this->from(),
                 ]));
             }
