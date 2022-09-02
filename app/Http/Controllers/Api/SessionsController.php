@@ -11,11 +11,11 @@ class SessionsController extends Controller
 {
     public function __invoke(CreateSessionRequest $request): JsonResponse
     {
-        return with($request->findOrCreateSession(), function (Session $session) {
+        return with($request->findOrCreateSession(), function (Session $session) use ($request) {
             return response()->json([
                 'online' => $session->online,
                 'sessionId' => $session->uuid,
-                'token' => $session->createToken(str()->uuid())->plainTextToken
+                'token' => $request->token($session)
             ], 201);
         });
     }

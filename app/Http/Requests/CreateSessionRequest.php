@@ -29,6 +29,11 @@ class CreateSessionRequest extends FormRequest
         return Session::create(['identity_id' => Hash::make($this->ip()), 'uuid' => str()->uuid()]);
     }
 
+    public function token(Session $session): string
+    {
+        return $this->bearerToken() ?? $session->createToken(str()->uuid())->plainTextToken;
+    }
+
     private function currentSession(): ?Session
     {
         return once(function () {
