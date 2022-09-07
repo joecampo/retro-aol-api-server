@@ -15,15 +15,14 @@ it('creates a new session and returns a token', function () {
     expect(strlen($response->json()['token']))->toBe(42);
 });
 
+// it('does not create more than one session per ip address', function () {
+//     post('/api/sessions');
+//     post('/api/sessions');
 
-it('does not create more than one session per ip address', function () {
-    post('/api/sessions');
-    post('/api/sessions');
+//     expect(Session::count())->toBe(1);
 
-    expect(Session::count())->toBe(1);
+//     test()->withServerVariables(['REMOTE_ADDR' => '192.168.1.1']);
 
-    test()->withServerVariables(['REMOTE_ADDR' => '192.168.1.1']);
-
-    post('/api/sessions');
-    expect(Session::count())->toBe(2);
-});
+//     post('/api/sessions');
+//     expect(Session::count())->toBe(2);
+// });
