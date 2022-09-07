@@ -9,6 +9,8 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class CreateSessionRequest extends FormRequest
 {
+    public string $token;
+
     public function authorize(): bool
     {
         return true;
@@ -24,15 +26,17 @@ class CreateSessionRequest extends FormRequest
     public function findOrCreateSession(): Session
     {
         if ($session = $this->currentSession()) {
+            $this->token = $this->bearerToken();
+
             return $session;
         }
 
-        return Session::create(['identity_id' => Hash::make($this->ip()), 'uuid' => str()->uuid()]);
-    }
-
-    public function token(Session $session): string
-    {
-        return $this->bearerToken() ?? $session->createToken(str()->uuid())->plainTextToken;
+        return tap(
+            Session::create(['identity_id' => Hash::make($this->ip()), 'uuid' => str()->uuid()]),
+            function (Session $session) {
+                $this->token = $session->createToken(str()->uuid())->plainTextToken;
+            }
+        );
     }
 
     private function currentSession(): ?Session

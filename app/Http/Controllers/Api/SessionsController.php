@@ -15,7 +15,7 @@ class SessionsController extends Controller
             return response()->json([
                 'online' => $session->online,
                 'sessionId' => $session->uuid,
-                'token' => $request->token($session)
+                'token' => $request->token,
             ], 201);
         });
     }
