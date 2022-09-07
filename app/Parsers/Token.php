@@ -11,7 +11,7 @@ class Token
             'Dd' => 'Dd',
             'SC' => 'SC',
             'pE' => 'pE',
-            'CJ' => 'CJ',
+            'LB' => 'LB',
             'cQ' => 'cQ',
             'CA' => 'CA',
             'CB' => 'CB',
