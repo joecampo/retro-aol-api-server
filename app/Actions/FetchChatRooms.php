@@ -25,7 +25,7 @@ class FetchChatRooms
         $this->set('connection', $connection);
         $this->set('session', $session);
 
-        $connection->write(Packet::make(ChatPacket::CJ_PACKET->value)->prepare());
+        $connection->write(Packet::make(ChatPacket::LB_PACKET->value)->prepare());
 
         $connection->on('data', function (string $data) {
             with(Packet::make($data), function (Packet $packet) {
