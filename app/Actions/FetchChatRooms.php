@@ -57,7 +57,7 @@ class FetchChatRooms
     private function startTimer(): void
     {
         once(function () {
-            Loop::addTimer(5, function () {
+            Loop::addTimer(10, function () {
                 $this->removeListener('data', $this->connection);
             });
         });
