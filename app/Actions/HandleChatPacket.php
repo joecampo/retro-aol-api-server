@@ -14,6 +14,8 @@ use App\Events\UserEnteredChat;
 use App\Events\UserLeftChat;
 use App\Enums\AtomPacketEvent;
 use App\ValueObjects\Atom;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class HandleChatPacket
 {
@@ -68,7 +70,13 @@ class HandleChatPacket
             ->explode('|')
             ->map(fn (string $data) => trim(utf8_encode(hex2binary($data))));
 
-        NewChatMessage::dispatch($this->session, $screenName, $message);
+        cache()->tags($this->session->id)->forever('chat_messages', $this->messages()->push([
+            'id' => $this->id(),
+            'screenName' => $screenName,
+            'message' => $message,
+        ]));
+
+        NewChatMessage::dispatch($this->session, $this->id(), $screenName, $message);
     }
 
     private function parseEnter(Packet $packet): void
@@ -85,9 +93,18 @@ class HandleChatPacket
         UserLeftChat::dispatch($this->session, $screenName);
     }
 
-
     public function isAtomPacket(Packet $packet, AtomPacket $enum): bool
     {
         return $packet->takeNumber(1)->toStringableHex()->is($enum->value);
+    }
+
+    private function messages(): Collection
+    {
+        return cache()->tags($this->session->id)->get('chat_messages', collect())->take(-100);
+    }
+
+    private function id(): string
+    {
+        return once(fn () => (string) Str::orderedUuid());
     }
 }

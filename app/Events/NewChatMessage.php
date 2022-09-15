@@ -17,6 +17,7 @@ class NewChatMessage implements ShouldBroadcast
 
     public function __construct(
         public Session $session,
+        public string $id,
         public string $screenName,
         public string $message
     ) {
@@ -24,7 +25,11 @@ class NewChatMessage implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
-        return ['screenName' => $this->screenName, 'message' => $this->message];
+        return [
+            'id' => $this->id,
+            'screenName' => $this->screenName,
+            'message' => $this->message
+        ];
     }
 
     public function broadcastAs(): string

@@ -45,6 +45,13 @@ it('can parse new messages in the chat room', function () {
     Event::assertDispatched(NewChatMessage::class, function ($event) {
         return $event->message === 'hi' && $event->screenName === 'Guest2';
     });
+
+    expect(cache()->tags(Session::first()->id)->get('chat_messages')->count())->toBe(1);
+
+    expect(cache()->tags(Session::first()->id)->get('chat_messages')->first())->toMatchArray([
+        'screenName' => 'Guest2',
+        'message' => 'hi'
+    ]);
 });
 
 it('can parse user leaving chat room', function () {

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ChatMessagesController;
 use App\Http\Controllers\Api\SessionsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\LoginController;
@@ -18,6 +19,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/join-chat-room', JoinChatRoomController::class);
     Route::post('/leave-chat-room', LeaveChatRoomController::class);
     Route::post('/send-chat-message', SendChatMessageController::class);
+    Route::get('/chat-messages', ChatMessagesController::class);
     Route::post('/send-instant-message', SendInstantMessageController::class);
     Route::post('/fetch-chat-rooms', FetchChatRoomsController::class);
 });
