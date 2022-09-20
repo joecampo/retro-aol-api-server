@@ -48,6 +48,8 @@ class HandleChatPacket
     {
         $users = $packet->atoms()->where('name', 'chat_add_user')->map(fn (Atom $atom) => $atom->toBinary());
 
+        cache()->tags($this->session->id)->forever('chat_users', $users->values());
+
         ChatRoomUsers::dispatch($this->session, $users->values()->toArray());
     }
 
@@ -83,12 +85,19 @@ class HandleChatPacket
     {
         $screenName = $packet->atoms()->firstWhere('name', 'chat_add_user')->toBinary();
 
+        cache()->tags($this->session->id)->forever('chat_users', $this->users()->push($screenName));
+
         UserEnteredChat::dispatch($this->session, $screenName);
     }
 
     private function parseLeave(Packet $packet): void
     {
         $screenName = $packet->atoms()->firstWhere('name', 'man_get_index_by_title')->toBinary();
+
+        cache()->tags($this->session->id)->forever(
+            'chat_users',
+            $this->users()->filter(fn ($user): bool => $user !== $screenName)
+        );
 
         UserLeftChat::dispatch($this->session, $screenName);
     }
@@ -101,6 +110,11 @@ class HandleChatPacket
     private function messages(): Collection
     {
         return cache()->tags($this->session->id)->get('chat_messages', collect())->take(-100);
+    }
+
+    private function users(): Collection
+    {
+        return cache()->tags($this->session->id)->get('chat_users', collect());
     }
 
     private function id(): string

@@ -23,6 +23,16 @@ it('can parse people that are in the chat room', function () {
 
     HandleChatPacket::run($this->session, $packet);
 
+    expect(cache()->tags($this->session->id)->get('chat_users')->toArray())->toBe([
+        'reaol',
+        'PoSsE4uS',
+        'Zip',
+        'Guest6ZE',
+        'Xak',
+        'Guest9',
+        'GuestP2YT'
+    ]);
+
     Event::assertDispatched(ChatRoomUsers::class, function ($event) {
         return $event->users === [
             'reaol',
@@ -58,8 +68,11 @@ it('can parse user leaving chat room', function () {
     Event::fake();
 
     $packet = Packet::make(TestPacket::CHAT_ROOM_LEFT_AT->value);
+    cache()->tags($this->session->id)->forever('chat_users', collect(['Guest3L4U']));
 
     HandleChatPacket::run($this->session, $packet);
+
+    expect(cache()->tags($this->session->id)->get('chat_users')->toArray())->toBe([]);
 
     Event::assertDispatched(UserLeftChat::class, function ($event) {
         return $event->screenName === 'Guest3L4U';
@@ -72,6 +85,8 @@ it('can parse user entering the chat room', function () {
     $packet = Packet::make(TestPacket::CHAT_ROOM_ENTER_AT->value);
 
     HandleChatPacket::run($this->session, $packet);
+
+    expect(cache()->tags($this->session->id)->get('chat_users')->toArray())->toBe(['Guest5']);
 
     Event::assertDispatched(UserEnteredChat::class, function ($event) {
         return $event->screenName === 'Guest5';
