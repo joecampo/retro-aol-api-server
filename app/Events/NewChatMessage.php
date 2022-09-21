@@ -27,6 +27,7 @@ class NewChatMessage implements ShouldBroadcast
     {
         return [
             'id' => $this->id,
+            'datetime' => now()->toString(),
             'screenName' => $this->screenName,
             'message' => $this->message
         ];
