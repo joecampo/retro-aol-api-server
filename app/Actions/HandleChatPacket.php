@@ -86,7 +86,7 @@ class HandleChatPacket
     {
         $screenName = $packet->atoms()->firstWhere('name', 'chat_add_user')->toBinary();
 
-        cache()->tags($this->session->id)->forever('chat_users', $this->users()->push($screenName));
+        cache()->tags($this->session->id)->forever('chat_users', $this->users()->push($screenName)->values());
 
         UserEnteredChat::dispatch($this->session, $screenName);
     }
@@ -97,7 +97,7 @@ class HandleChatPacket
 
         cache()->tags($this->session->id)->forever(
             'chat_users',
-            $this->users()->filter(fn ($user): bool => $user !== $screenName)
+            $this->users()->filter(fn ($user): bool => $user !== $screenName)->values()
         );
 
         UserLeftChat::dispatch($this->session, $screenName);
