@@ -74,6 +74,7 @@ class HandleChatPacket
 
         cache()->tags($this->session->id)->forever('chat_messages', $this->messages()->push([
             'id' => $this->id(),
+            'datetime' => now()->toString(),
             'screenName' => $screenName,
             'message' => $message,
         ]));

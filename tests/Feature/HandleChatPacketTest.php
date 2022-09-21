@@ -58,7 +58,11 @@ it('can parse new messages in the chat room', function () {
 
     expect(cache()->tags(Session::first()->id)->get('chat_messages')->count())->toBe(1);
 
-    expect(cache()->tags(Session::first()->id)->get('chat_messages')->first())->toMatchArray([
+    $cachedMessage = cache()->tags(Session::first()->id)->get('chat_messages')->first();
+
+    expect(now()->parse($cachedMessage['datetime'])->format('Y-m-d'))->toBe(now()->format('Y-m-d'));
+
+    expect($cachedMessage)->toMatchArray([
         'screenName' => 'Guest2',
         'message' => 'hi'
     ]);
