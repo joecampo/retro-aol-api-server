@@ -72,12 +72,17 @@ class HandleChatPacket
             ->explode('|')
             ->map(fn (string $data) => trim(utf8_encode(hex2binary($data))));
 
-        cache()->tags($this->session->id)->forever('chat_messages', $this->messages()->push([
-            'id' => $this->id(),
-            'datetime' => now()->toString(),
-            'screenName' => $screenName,
-            'message' => $message,
-        ]));
+        cache()->tags($this->session->id)->forever(
+            'chat_messages',
+            $this->messages()
+                ->push([
+                    'id' => $this->id(),
+                    'datetime' => now()->toString(),
+                    'screenName' => $screenName,
+                    'message' => $message,
+                ])
+                ->values()
+        );
 
         NewChatMessage::dispatch($this->session, $this->id(), $screenName, $message);
     }
