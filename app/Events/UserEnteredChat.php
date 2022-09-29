@@ -24,7 +24,7 @@ class UserEnteredChat implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
-        return ['id' => $this->id, 'screenName' => $this->screenName];
+        return ['id' => $this->id, 'datetime' => now()->toString(), 'screenName' => $this->screenName];
     }
 
     public function broadcastAs(): string
