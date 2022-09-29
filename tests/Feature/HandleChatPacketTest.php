@@ -78,6 +78,13 @@ it('can parse user leaving chat room', function () {
 
     expect(cache()->tags($this->session->id)->get('chat_users')->toArray())->toBe([]);
 
+    $cachedMessage = cache()->tags(Session::first()->id)->get('chat_messages')->first();
+
+    expect($cachedMessage)->toMatchArray([
+        'screenName' => 'OnlineHost',
+        'message' => 'Guest3L4U has left the room.'
+    ]);
+
     Event::assertDispatched(UserLeftChat::class, function ($event) {
         return $event->screenName === 'Guest3L4U';
     });
@@ -91,6 +98,13 @@ it('can parse user entering the chat room', function () {
     HandleChatPacket::run($this->session, $packet);
 
     expect(cache()->tags($this->session->id)->get('chat_users')->toArray())->toBe(['Guest5']);
+
+    $cachedMessage = cache()->tags(Session::first()->id)->get('chat_messages')->first();
+
+    expect($cachedMessage)->toMatchArray([
+        'screenName' => 'OnlineHost',
+        'message' => 'Guest5 has entered the room.'
+    ]);
 
     Event::assertDispatched(UserEnteredChat::class, function ($event) {
         return $event->screenName === 'Guest5';

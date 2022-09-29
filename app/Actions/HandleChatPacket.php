@@ -72,17 +72,7 @@ class HandleChatPacket
             ->explode('|')
             ->map(fn (string $data) => trim(utf8_encode(hex2binary($data))));
 
-        cache()->tags($this->session->id)->forever(
-            'chat_messages',
-            $this->messages()
-                ->push([
-                    'id' => $this->id(),
-                    'datetime' => now()->toString(),
-                    'screenName' => $screenName,
-                    'message' => $message,
-                ])
-                ->values()
-        );
+        $this->addMessageToCache($screenName, $message);
 
         NewChatMessage::dispatch($this->session, $this->id(), $screenName, $message);
     }
@@ -93,7 +83,9 @@ class HandleChatPacket
 
         cache()->tags($this->session->id)->forever('chat_users', $this->users()->push($screenName)->values());
 
-        UserEnteredChat::dispatch($this->session, $screenName);
+        $this->addMessageToCache('OnlineHost', "{$screenName} has entered the room.");
+
+        UserEnteredChat::dispatch($this->session, $this->id(), $screenName);
     }
 
     private function parseLeave(Packet $packet): void
@@ -105,12 +97,29 @@ class HandleChatPacket
             $this->users()->filter(fn ($user): bool => $user !== $screenName)->values()
         );
 
-        UserLeftChat::dispatch($this->session, $screenName);
+        $this->addMessageToCache('OnlineHost', "{$screenName} has left the room.");
+
+        UserLeftChat::dispatch($this->session, $this->id(), $screenName);
     }
 
     public function isAtomPacket(Packet $packet, AtomPacket $enum): bool
     {
         return $packet->takeNumber(1)->toStringableHex()->is($enum->value);
+    }
+
+    private function addMessageToCache(string $screenName, string $message): void
+    {
+        cache()->tags($this->session->id)->forever(
+            'chat_messages',
+            $this->messages()
+                ->push([
+                    'id' => $this->id(),
+                    'datetime' => now()->toString(),
+                    'screenName' => $screenName,
+                    'message' => $message,
+                ])
+                ->values()
+        );
     }
 
     private function messages(): Collection

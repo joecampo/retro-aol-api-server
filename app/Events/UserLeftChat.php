@@ -17,13 +17,14 @@ class UserLeftChat implements ShouldBroadcast
 
     public function __construct(
         public Session $session,
+        public string $id,
         public string $screenName
     ) {
     }
 
     public function broadcastWith(): array
     {
-        return ['screenName' => $this->screenName];
+        return ['id' => $this->id, 'screenName' => $this->screenName];
     }
 
     public function broadcastAs(): string
