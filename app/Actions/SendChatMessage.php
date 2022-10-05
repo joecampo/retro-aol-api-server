@@ -7,6 +7,7 @@ use App\Models\Session;
 use App\ValueObjects\Packet;
 use Lorisleiva\Actions\Concerns\AsAction;
 use React\Socket\ConnectionInterface;
+use Illuminate\Support\Str;
 
 class SendChatMessage
 {
@@ -14,7 +15,7 @@ class SendChatMessage
 
     public function handle(ConnectionInterface $connection, Session $session, string $message): void
     {
-        if (! $message) {
+        if (! $message = Str::ascii($message)) {
             return;
         }
 
