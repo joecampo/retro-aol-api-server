@@ -90,6 +90,20 @@ it('can parse user leaving chat room', function () {
     });
 });
 
+it('does not parse leaves for users not currently in chat room', function () {
+    Event::fake();
+
+    $packet = Packet::make(TestPacket::CHAT_ROOM_LEFT_AT->value);
+
+    HandleChatPacket::run($this->session, $packet);
+
+    expect(cache()->tags($this->session->id)->get('chat_users'))->toBe(null);
+
+    Event::assertNotDispatched(UserLeftChat::class, function ($event) {
+        return $event->screenName === 'Guest3L4U';
+    });
+});
+
 it('can parse user entering the chat room', function () {
     Event::fake();
 

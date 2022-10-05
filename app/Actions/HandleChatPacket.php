@@ -92,6 +92,10 @@ class HandleChatPacket
     {
         $screenName = $packet->atoms()->firstWhere('name', 'man_get_index_by_title')->toBinary();
 
+        if (!$this->users()->contains($screenName)) {
+            return;
+        }
+
         cache()->tags($this->session->id)->forever(
             'chat_users',
             $this->users()->filter(fn ($user): bool => $user !== $screenName)->values()
