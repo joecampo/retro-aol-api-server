@@ -38,7 +38,6 @@ class HandleChatPacket
         match (AtomPacketEvent::event($packet)) {
             AtomPacketEvent::CHAT_ROOM_ENTER => $this->parseEnter($packet),
             AtomPacketEvent::CHAT_ROOM_LEAVE => $this->parseLeave($packet),
-            AtomPacketEvent::INSTANT_MESSAGE => HandleInstantMessagePacket::run($this->session, $packet),
             AtomPacketEvent::CHAT_ROOM_PEOPLE => $this->parsePeopleInRoom($packet),
             default => null
         };

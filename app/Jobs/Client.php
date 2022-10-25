@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Actions\HandleGlobalPacket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,6 +17,7 @@ use React\Socket\ServerInterface;
 use React\Socket\SocketServer;
 use App\Events\LoginInvalid;
 use Illuminate\Support\Facades\Event;
+use App\ValueObjects\Packet;
 use function Clue\React\Block\sleep;
 
 class Client implements ShouldQueue
@@ -56,6 +58,8 @@ class Client implements ShouldQueue
                     if (app()->environment('local')) {
                         info(bin2hex($data));
                     }
+
+                    HandleGlobalPacket::run($this->session, Packet::make($data));
                 });
 
                 $connection->on('close', function () {
