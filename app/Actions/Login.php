@@ -166,6 +166,8 @@ class Login
         if (strtolower($username) !== 'guest') {
             $this->screenName = $username;
 
+            cache()->tags($this->session->id)->forever('screen_name', $this->screenName);
+
             SetScreenName::dispatch($this->session, $this->screenName);
 
             return;
@@ -174,6 +176,8 @@ class Login
         if ($packet->token() === 'AT' && $packet->atoms()->contains('name', 'act_set_guest_flag')) {
             with(str($packet->atoms()->firstWhere('name', 'man_append_data')->toBinary()), function (Stringable $text) {
                 $this->screenName = $text->match('/, (.*?)</');
+
+                cache()->tags($this->session->id)->forever('screen_name', $this->screenName);
 
                 SetScreenName::dispatch($this->session, $this->screenName);
             });

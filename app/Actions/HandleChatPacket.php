@@ -112,6 +112,10 @@ class HandleChatPacket
 
     private function addMessageToCache(string $screenName, string $message): void
     {
+        if (cache()->tags($this->session->id)->get('screen_name', null) === $screenName) {
+            return;
+        }
+
         cache()->tags($this->session->id)->forever(
             'chat_messages',
             $this->messages()
