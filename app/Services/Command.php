@@ -9,7 +9,7 @@ class Command
 {
     public static function dispatch(string $action, mixed $payload = null): void
     {
-        if (!self::port()) {
+        if (! self::port()) {
             return;
         }
 

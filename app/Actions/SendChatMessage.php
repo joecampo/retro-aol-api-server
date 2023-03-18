@@ -16,9 +16,11 @@ class SendChatMessage
     use AsAction;
     use WithAttributes;
 
-    public function handle(ConnectionInterface $connection, Session $session, string $message, mixed $id = null): void
+    public function handle(ConnectionInterface $connection, Session $session, array $input): void
     {
         $this->set('session', $session);
+
+        [$message, $id] = $input;
 
         if (! $message = Str::ascii($message)) {
             return;

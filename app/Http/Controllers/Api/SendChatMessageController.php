@@ -12,7 +12,7 @@ class SendChatMessageController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {
-        Command::dispatch(SendChatMessage::class, $request->message);
+        Command::dispatch(SendChatMessage::class, [$request->message, $request->id]);
 
         return response()->json('', 201);
     }
