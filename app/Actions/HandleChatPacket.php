@@ -51,8 +51,8 @@ class HandleChatPacket
         
         $chatRoom = cache()->tags($this->session->id)->get('chat_room');
 
-        $this->addMessageToCache('OnlineHost', "*** You are in {$chatRoom}. ***");
-        NewChatMessage::dispatch($this->session, $this->id(), 'OnlineHost', "*** You are in {$chatRoom}. ***");
+        $this->addMessageToCache('OnlineHost', "*** You are in \"{$chatRoom}\". ***");
+        NewChatMessage::dispatch($this->session, $this->id(), 'OnlineHost', "*** You are in \"{$chatRoom}\". ***");
 
         ChatRoomUsers::dispatch($this->session, $users->values()->toArray());
     }
