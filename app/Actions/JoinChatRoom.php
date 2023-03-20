@@ -14,7 +14,7 @@ class JoinChatRoom
     use AsAction;
     use WithAttributes;
 
-    public function handle(ConnectionInterface $connection, Session $session, $roomName): void
+    public function handle(ConnectionInterface $connection, Session $session, string $roomName): void
     {
         $this->set('connection', $connection);
         $this->set('session', $session);
@@ -27,6 +27,8 @@ class JoinChatRoom
 
             $this->connection->write(Packet::make($packet)->prepare());
         });
+
+        cache()->tags($this->session->id)->forever('chat_room', $this->roomName);
 
         $connection->on('data', function (string $data): void {
             HandleChatPacket::run($this->session, Packet::make($data));

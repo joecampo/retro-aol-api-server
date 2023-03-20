@@ -48,6 +48,11 @@ class HandleChatPacket
         $users = $packet->atoms()->where('name', 'chat_add_user')->map(fn (Atom $atom) => $atom->toBinary());
 
         cache()->tags($this->session->id)->forever('chat_users', $users->values());
+        
+        $chatRoom = cache()->tags($this->session->id)->get('chat_room');
+
+        $this->addMessageToCache('OnlineHost', "*** You are in {$chatRoom}. ***");
+        NewChatMessage::dispatch($this->session, $this->id(), 'OnlineHost', "*** You are in {$chatRoom}. ***");
 
         ChatRoomUsers::dispatch($this->session, $users->values()->toArray());
     }
@@ -83,6 +88,7 @@ class HandleChatPacket
         cache()->tags($this->session->id)->forever('chat_users', $this->users()->push($screenName)->values());
 
         $this->addMessageToCache('OnlineHost', "{$screenName} has entered the room.");
+        NewChatMessage::dispatch($this->session, $this->id(), 'OnlineHost', "{$screenName} has entered the room.");
 
         UserEnteredChat::dispatch($this->session, $this->id(), $screenName);
     }
@@ -101,6 +107,7 @@ class HandleChatPacket
         );
 
         $this->addMessageToCache('OnlineHost', "{$screenName} has left the room.");
+        NewChatMessage::dispatch($this->session, $this->id(), 'OnlineHost', "{$screenName} has left the room.");
 
         UserLeftChat::dispatch($this->session, $this->id(), $screenName);
     }
@@ -112,7 +119,7 @@ class HandleChatPacket
 
     private function addMessageToCache(string $screenName, string $message): void
     {
-        if (cache()->tags($this->session->id)->get('screen_name', null) === $screenName) {
+        if (cache()->tags($this->session->id)->get('screen_name') === $screenName) {
             return;
         }
 
